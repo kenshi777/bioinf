@@ -43,6 +43,6 @@ for num, primer in primers.items():
             d[rc_part].append(num)
 
 print(d)
-with open('wind.txt', 'w') as file:
+with open('window.txt', 'w') as file:
     file.write(str(d))
 

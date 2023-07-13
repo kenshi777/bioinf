@@ -1,8 +1,12 @@
 from Bio import SeqIO
 from pathlib import Path
-import os
+from collections import Counter
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
 
 pathlist = Path('./pass').glob('*.fastq')
+
 forward = {'ACGAGAC': ['fw_1'], 'AATCAGT': ['fw_1'], 'CGAGACT': ['fw_1'], 'ATCAGTC': ['fw_1'], 'GAGACTG': ['fw_1'], 
  'TCAGTCT': ['fw_1'], 'AGACTGA': ['fw_1'], 'CAGTCTC': ['fw_1'], 'GACTGAT': ['fw_1'], 'AGTCTCG': ['fw_1'], 
  'GCTGTAC': ['fw_2'], 'AATCCGT': ['fw_2'], 'CTGTACG': ['fw_2'], 'ATCCGTA': ['fw_2'], 'TGTACGG': ['fw_2'], 
@@ -14,11 +18,11 @@ forward = {'ACGAGAC': ['fw_1'], 'AATCAGT': ['fw_1'], 'CGAGACT': ['fw_1'], 'ATCAG
  'ATCGCAC': ['fw_5'], 'TTACTGT': ['fw_5'], 'TCGCACA': ['fw_5'], 'TACTGTG': ['fw_5'], 'CGCACAG': ['fw_5'], 
  'ACTGTGC': ['fw_5'], 'GCACAGT': ['fw_5'], 'CTGTGCG': ['fw_5'], 'CACAGTA': ['fw_5'], 'TGTGCGA': ['fw_5'], 
  'GTCGTGT': ['fw_6'], 'AGGCTAC': ['fw_6'], 'TCGTGTA': ['fw_6'], 'GGCTACA': ['fw_6'], 'CGTGTAG': ['fw_6'], 
- 'GCTACAC': ['fw_6'], 'GTGTAGC': ['fw_6'], 'CTACACG': ['fw_6'], 'TGTAGCC': ['fw_6'], 'TACACGA': ['fw_6', 'rv_8'], 
+ 'GCTACAC': ['fw_6'], 'GTGTAGC': ['fw_6'], 'CTACACG': ['fw_6'], 'TGTAGCC': ['fw_6'], 'TACACGA': ['fw_6'], 
  'AGCGGAG': ['fw_7'], 'CTAACCT': ['fw_7'], 'GCGGAGG': ['fw_7'], 'TAACCTC': ['fw_7'], 'CGGAGGT': ['fw_7'], 
  'AACCTCC': ['fw_7'], 'GGAGGTT': ['fw_7'], 'ACCTCCG': ['fw_7'], 'GAGGTTA': ['fw_7'], 'CCTCCGC': ['fw_7'], 
  'ATCCTTT': ['fw_8'], 'GAACCAA': ['fw_8'], 'TCCTTTG': ['fw_8'], 'AACCAAA': ['fw_8'], 'CCTTTGG': ['fw_8'], 
- 'ACCAAAG': ['fw_8'], 'CTTTGGT': ['fw_8'], 'CCAAAGG': ['fw_8'], 'TTTGGTT': ['fw_8'], 'CAAAGGA': ['fw_8'], }
+ 'ACCAAAG': ['fw_8'], 'CTTTGGT': ['fw_8'], 'CCAAAGG': ['fw_8'], 'TTTGGTT': ['fw_8'], 'CAAAGGA': ['fw_8']}
 
 reverse =  {'TACAGCG': ['rv_1'], 'GTATGCG': ['rv_1'], 'ACAGCGC': ['rv_1'], 'TATGCGC': ['rv_1'], 'CAGCGCA': ['rv_1'], 
  'ATGCGCT': ['rv_1'], 'AGCGCAT': ['rv_1'], 'TGCGCTG': ['rv_1'], 'GCGCATA': ['rv_1'], 'GCGCTGT': ['rv_1'], 
@@ -35,40 +39,92 @@ reverse =  {'TACAGCG': ['rv_1'], 'GTATGCG': ['rv_1'], 'ACAGCGC': ['rv_1'], 'TATG
  'GAATACC': ['rv_7'], 'GACTTGG': ['rv_7'], 'AATACCA': ['rv_7'], 'ACTTGGT': ['rv_7'], 'ATACCAA': ['rv_7'], 
  'CTTGGTA': ['rv_7'], 'TACCAAG': ['rv_7'], 'TTGGTAT': ['rv_7'], 'ACCAAGT': ['rv_7'], 'TGGTATT': ['rv_7'], 
  'GTAGATC': ['rv_8'], 'TAGATCG': ['rv_8'], 'ACACGAT': ['rv_8'], 'AGATCGT': ['rv_8'], 'CACGATC': ['rv_8'], 
- 'GATCGTG': ['rv_8'], 'ACGATCT': ['rv_8'], 'ATCGTGT': ['rv_8'], 'CGATCTA': ['rv_8'], 'TAACGTG': ['rv_9'], 
- 'GCACACA': ['rv_9'], 'AACGTGT': ['rv_9'], 'CACACAC': ['rv_9'], 'ACGTGTG': ['rv_9'], 'ACACACG': ['rv_9'], 
- 'CGTGTGT': ['rv_9'], 'CACACGT': ['rv_9'], 'GTGTGTG': ['rv_9'], 'ACACGTT': ['rv_9'], 'CATTATG': ['rv_10'], 
- 'CACGCCA': ['rv_10'], 'ATTATGG': ['rv_10'], 'ACGCCAT': ['rv_10'], 'TTATGGC': ['rv_10'], 'CGCCATA': ['rv_10'], 
- 'TATGGCG': ['rv_10'], 'GCCATAA': ['rv_10'], 'ATGGCGT': ['rv_10'], 'CCATAAT': ['rv_10'], 'CCAATAC': ['rv_11'], 
- 'CAGGCGT': ['rv_11'], 'CAATACG': ['rv_11'], 'AGGCGTA': ['rv_11'], 'AATACGC': ['rv_11'], 'GGCGTAT': ['rv_11'], 
- 'ATACGCC': ['rv_11'], 'GCGTATT': ['rv_11'], 'TACGCCT': ['rv_11'], 'CGTATTG': ['rv_11'], 'GATCTGC': ['rv_12'], 
- 'GGATCGC': ['rv_12'], 'ATCTGCG': ['rv_12'], 'GATCGCA': ['rv_12'], 'TCTGCGA': ['rv_12'], 'ATCGCAG': ['rv_12'], 
- 'CTGCGAT': ['rv_12'], 'TCGCAGA': ['rv_12'], 'TGCGATC': ['rv_12'], 'CGCAGAT': ['rv_12']}
+ 'GATCGTG': ['rv_8'], 'ACGATCT': ['rv_8'], 'ATCGTGT': ['rv_8'], 'CGATCTA': ['rv_8'], 'TACACGA': ['rv_8'], 
+ 'TAACGTG': ['rv_9'], 'GCACACA': ['rv_9'], 'AACGTGT': ['rv_9'], 'CACACAC': ['rv_9'], 'ACGTGTG': ['rv_9'], 
+ 'ACACACG': ['rv_9'], 'CGTGTGT': ['rv_9'], 'CACACGT': ['rv_9'], 'GTGTGTG': ['rv_9'], 'ACACGTT': ['rv_9'], 
+ 'CATTATG': ['rv_10'], 'CACGCCA': ['rv_10'], 'ATTATGG': ['rv_10'], 'ACGCCAT': ['rv_10'], 'TTATGGC': ['rv_10'], 
+ 'CGCCATA': ['rv_10'], 'TATGGCG': ['rv_10'], 'GCCATAA': ['rv_10'], 'ATGGCGT': ['rv_10'], 'CCATAAT': ['rv_10'], 
+ 'CCAATAC': ['rv_11'], 'CAGGCGT': ['rv_11'], 'CAATACG': ['rv_11'], 'AGGCGTA': ['rv_11'], 'AATACGC': ['rv_11'], 
+ 'GGCGTAT': ['rv_11'], 'ATACGCC': ['rv_11'], 'GCGTATT': ['rv_11'], 'TACGCCT': ['rv_11'], 'CGTATTG': ['rv_11'], 
+ 'GATCTGC': ['rv_12'], 'GGATCGC': ['rv_12'], 'ATCTGCG': ['rv_12'], 'GATCGCA': ['rv_12'], 'TCTGCGA': ['rv_12'], 
+ 'ATCGCAG': ['rv_12'], 'CTGCGAT': ['rv_12'], 'TCGCAGA': ['rv_12'], 'TGCGATC': ['rv_12'], 'CGCAGAT': ['rv_12']}
+
+counter = {
+    'fw_1' : 0,
+    'fw_2' : 0,
+    'fw_3' : 0,
+    'fw_4' : 0,
+    'fw_5' : 0,
+    'fw_6' : 0,
+    'fw_7' : 0,
+    'fw_8' : 0,
+    'rv_1' : 0,
+    'rv_2' : 0,
+    'rv_3' : 0,
+    'rv_4' : 0,
+    'rv_5' : 0,
+    'rv_6' : 0,
+    'rv_7' : 0,
+    'rv_8' : 0,
+    'rv_9' : 0,
+    'rv_10' : 0,
+    'rv_11' : 0,
+    'rv_12' : 0
+}
 
 start = 5
 length = 50
 size = 7
 
-final = {}
 
 for path in pathlist:
+    final = {}
     for seq_record in SeqIO.parse(path, 'fastq'):
+        seq = str(seq_record.seq)
+        read = seq_record.description.split()[3][5:]    
         for i in range(length):
             fw = str(seq_record.seq)[(start + i) : (start + size + i)]
             rv = str(seq_record.seq)[(-start -size - i) : (-start - i)]
-
+            
             if fw in forward:
-                seq = str(seq_record.seq)
                 if seq not in final:
-                    final[seq] = [forward[fw]]
+                    final[read] = [forward[fw]]
+
                 else:
-                    final[seq].append(forward[fw])
+# Вначале ставим флаг == false, далее пробегаемся по всем значениям по ключу final[seq],
+# если находим значение которое хотим добавить, то меняем флаг на true и следовательно праймер не добавится к значениям словаря.
+                    flag_forward = False
+                    for value in final[read]:
+                        if value == forward[fw]:
+                            flag_forward = True
+                    if flag_forward == False:
+                        final[read].append(forward[fw])
+
             if rv in reverse:
-                seq = str(seq_record.seq)
                 if seq not in final:
-                    final[seq] = [reverse[rv]]
+                    final[read] = [reverse[rv]]
+# Аналогично с обратным праймером
                 else:
-                    final[seq].append(reverse[rv])
-    print(final)
-    print(len(final))
-    break
+                    flag_reverse = False
+                    for value in final[read]:
+                        if value == reverse[rv]:
+                            flag_reverse = True
+                    if flag_reverse == False:
+                        final[read].append(reverse[rv])
+    
+    for key, value in final.items():
+        final[key] = ", ".join([a for b in value for a in b])
+    for key, value in dict(Counter(list(final.values()))).items():
+        counter[key] += value
+
+    with open(f'results/{str(path)[17:-6]}.txt', 'w') as file:
+        file.write('read: primers\n')
+        for key, value in final.items():
+            file.write(f'{key}: {value}\n')
+
+df = pd.DataFrame(list(counter.items()), columns = ['Primer', 'Count'])
+# df.to_excel('asd.xlsx')
+
+with sns.axes_style('darkgrid'):
+    sns.barplot(data=df, x='Primer', y='Count')
+
