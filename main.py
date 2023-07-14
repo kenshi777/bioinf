@@ -122,9 +122,9 @@ for path in pathlist:
         for key, value in final.items():
             file.write(f'{key}: {value}\n')
 
-df = pd.DataFrame(list(counter.items()), columns = ['Primer', 'Count'])
+# df = pd.DataFrame(list(counter.items()), columns = ['Primer', 'Count'])
 # df.to_excel('asd.xlsx')
 
-with sns.axes_style('darkgrid'):
-    sns.barplot(data=df, x='Primer', y='Count')
+# with sns.axes_style('darkgrid'):
+#     sns.barplot(data=df, x='Primer', y='Count')
 
